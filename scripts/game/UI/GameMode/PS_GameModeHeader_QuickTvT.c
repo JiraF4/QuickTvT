@@ -11,10 +11,14 @@ modded class PS_GameModeHeader
 		m_StepTimerText = TextWidget.Cast(w.FindAnyWidget("StepTimerText"));
 		m_GameMode = PS_GameModeQuickTvT.Cast(GetGame().GetGameMode());
 		GetGame().GetCallqueue().CallLater(UpdateTimer, 0, true);
+		UpdateTimer();
 	}
 	
 	void UpdateTimer()
 	{
+		if (!m_GameMode)
+			return;
+		
 		int time = m_GameMode.GetStepTime() + 999;
 		
 		int seconds = time/1000;

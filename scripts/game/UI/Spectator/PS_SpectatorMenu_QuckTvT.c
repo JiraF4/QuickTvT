@@ -11,6 +11,7 @@ modded class PS_SpectatorMenu
 		m_StepTimerText = TextWidget.Cast(GetRootWidget().FindAnyWidget("StepTimerText"));
 		m_GameMode = PS_GameModeQuickTvT.Cast(GetGame().GetGameMode());
 		GetGame().GetCallqueue().CallLater(UpdateTimer, 0, true);
+		UpdateTimer();
 	}
 	
 	void UpdateTimer()

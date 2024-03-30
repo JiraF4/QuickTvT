@@ -1547,11 +1547,11 @@ PS_GameModeQuickTvT "60FB280EC600AC77" {
  PlayerControllerPrefab "{4E5DAC62A374950F}Prefabs/Characters/Core/DefaultPlayerControllerMP_Coop.et"
  m_bAutoPlayerRespawn 0
  m_bAllowFactionChange 0
- m_iPreviewTime 5000
- m_iSlotsTime 5000
- m_iBriefingTime 5000
- m_iGameTime 5000
- m_iDebriefingTime 5000
+ m_iPreviewTime 3000
+ m_iSlotsTime 3000
+ m_iBriefingTime 3000
+ m_iGameTime 3000
+ m_iDebriefingTime 3000
  {
   RadioManagerEntity {
    components {
