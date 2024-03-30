@@ -1,0 +1,8 @@
+GameProject {
+ ID "QuickTvT"
+ GUID "60FB0A9FCE42D595"
+ TITLE "QuickTvT"
+ Dependencies {
+  "58D0FB3206B6F859"
+ }
+}
