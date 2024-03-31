@@ -10,16 +10,16 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 	[Attribute("15000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iPreviewTime;
 	
-	[Attribute("60000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
+	[Attribute("30000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iSlotsTime;
 	
-	[Attribute("60000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
+	[Attribute("30000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iBriefingTime;
 	
-	[Attribute("960000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
+	[Attribute("480000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iGameTime;
 	
-	[Attribute("30000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
+	[Attribute("12000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iDebriefingTime;
 	
 	protected int m_iStepTime;
@@ -43,12 +43,12 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 	}
 	
 	override void EOnFrame(IEntity owner, float timeSlice)
-	{
+	{		
 		if (m_iStepTime > 0)
 		{
 			m_iStepTime -= timeSlice * 1000;
 			
-			if (m_iStepTime <= 0)	
+			if (Replication.IsServer() && m_iStepTime <= 0)
 				AdvanceGameState(GetState());
 		}
 	}
@@ -108,7 +108,8 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 			}
 			checkFaction = factionKey;
 		}
-			
+		
+		m_OnOnlyOneFactionAlive.Invoke(checkFaction);
 		AdvanceGameState(SCR_EGameModeState.GAME);
 		GetGame().GetCallqueue().Remove(CheckAlive);
 	}
