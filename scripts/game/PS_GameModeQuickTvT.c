@@ -26,27 +26,32 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 	
 	protected static int m_iMissionNum = 0;
 	
+	protected PlayerManager m_PlayerManager;
+	
 	int GetStepTime()
 		return m_iStepTime;
 	
 	override void OnGameStart()
 	{
 		super.OnGameStart();
-		m_iMissionNum++;
 		
 		m_QuickTvTMissionsConfig = new PS_QuickTvTMissionsConfig();
 		SCR_JsonLoadContext configLoadContext = new SCR_JsonLoadContext();
 		configLoadContext.LoadFromFile(m_QuickTvTConfigFilePath);
 		configLoadContext.ReadValue("", m_QuickTvTMissionsConfig);
 		
+		m_PlayerManager = GetGame().GetPlayerManager();
+		
 		m_iStepTime = m_iPreviewTime;
 	}
 	
 	override void EOnFrame(IEntity owner, float timeSlice)
-	{		
+	{
 		if (m_iStepTime > 0)
 		{
-			m_iStepTime -= timeSlice * 1000;
+			int playersCount = m_PlayerManager.GetPlayerCount();
+			if (GetState() != SCR_EGameModeState.PREGAME || playersCount > 1)
+				m_iStepTime -= timeSlice * 1000;
 			
 			if (Replication.IsServer() && m_iStepTime <= 0)
 				AdvanceGameState(GetState());
@@ -116,11 +121,29 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 	
 	void ChangeToNextMission()
 	{
+		int playersCount = m_PlayerManager.GetPlayerCount();
+		
+		// Get next mission
+		m_iMissionNum++;
 		if (m_iMissionNum >= m_QuickTvTMissionsConfig.Missions.Count())
 		{
 			m_iMissionNum = 0;
 		}
 		PS_QuickTvTMission mission = m_QuickTvTMissionsConfig.Missions[m_iMissionNum];
+		
+		// skip to next valide
+		int i = 0;
+		while (mission.MinPlayers > playersCount || mission.MaxPlayers < playersCount)
+		{
+			i++;
+			if (i > 100) break;
+			
+			m_iMissionNum++;
+			if (m_iMissionNum >= m_QuickTvTMissionsConfig.Missions.Count())
+				m_iMissionNum = 0;
+			
+			mission = m_QuickTvTMissionsConfig.Missions[m_iMissionNum];
+		}
 		GameStateTransitions.RequestScenarioChangeTransition(mission.MissionConfig, "");
 	}
 };
