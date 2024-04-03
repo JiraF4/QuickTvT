@@ -5,7 +5,7 @@ class PS_GameModeQuickTvTClass: PS_GameModeCoopClass
 class PS_GameModeQuickTvT : PS_GameModeCoop
 {
 	static const string m_QuickTvTConfigFilePath = "$profile:PS_QuickTvT_Config.json";
-	protected ref PS_QuickTvTMissionsConfig m_QuickTvTMissionsConfig;
+	protected static ref PS_QuickTvTMissionsConfig m_QuickTvTMissionsConfig;
 	
 	[Attribute("15000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iPreviewTime;
@@ -22,6 +22,7 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 	[Attribute("12000", UIWidgets.EditBox, "", "", category: "Reforger Lobby")]
 	int m_iDebriefingTime;
 	
+	[RplProp()]
 	protected int m_iStepTime;
 	
 	protected static int m_iMissionNum = 0;
@@ -35,26 +36,42 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 	{
 		super.OnGameStart();
 		
-		m_QuickTvTMissionsConfig = new PS_QuickTvTMissionsConfig();
-		SCR_JsonLoadContext configLoadContext = new SCR_JsonLoadContext();
-		configLoadContext.LoadFromFile(m_QuickTvTConfigFilePath);
-		configLoadContext.ReadValue("", m_QuickTvTMissionsConfig);
+		if (!m_QuickTvTMissionsConfig)
+		{
+			m_QuickTvTMissionsConfig = new PS_QuickTvTMissionsConfig();
+			SCR_JsonLoadContext configLoadContext = new SCR_JsonLoadContext();
+			configLoadContext.LoadFromFile(m_QuickTvTConfigFilePath);
+			configLoadContext.ReadValue("", m_QuickTvTMissionsConfig);
+			
+			m_QuickTvTMissionsConfig.SortRandom();
+		}
 		
 		m_PlayerManager = GetGame().GetPlayerManager();
+		
+		if (m_iGameTime == 0)
+		{
+			m_iMissionNum = 0;
+			ChangeToNextMission();
+		}
 		
 		m_iStepTime = m_iPreviewTime;
 	}
 	
 	override void EOnFrame(IEntity owner, float timeSlice)
 	{
+		if (!Replication.IsServer())
+			return;
+		
 		if (m_iStepTime > 0)
 		{
 			int playersCount = m_PlayerManager.GetPlayerCount();
 			if (GetState() != SCR_EGameModeState.PREGAME || playersCount > 1)
 				m_iStepTime -= timeSlice * 1000;
 			
-			if (Replication.IsServer() && m_iStepTime <= 0)
+			if (m_iStepTime <= 0)
 				AdvanceGameState(GetState());
+			
+			Replication.BumpMe();
 		}
 	}
 	
@@ -128,6 +145,7 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 		if (m_iMissionNum >= m_QuickTvTMissionsConfig.Missions.Count())
 		{
 			m_iMissionNum = 0;
+			m_QuickTvTMissionsConfig.SortRandom();
 		}
 		PS_QuickTvTMission mission = m_QuickTvTMissionsConfig.Missions[m_iMissionNum];
 		
@@ -140,7 +158,10 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 			
 			m_iMissionNum++;
 			if (m_iMissionNum >= m_QuickTvTMissionsConfig.Missions.Count())
+			{
 				m_iMissionNum = 0;
+				m_QuickTvTMissionsConfig.SortRandom();
+			}
 			
 			mission = m_QuickTvTMissionsConfig.Missions[m_iMissionNum];
 		}
@@ -151,6 +172,17 @@ class PS_GameModeQuickTvT : PS_GameModeCoop
 class PS_QuickTvTMissionsConfig: JsonApiStruct
 {
 	ref array<ref PS_QuickTvTMission> Missions = {};
+	ref RandomGenerator m_RandomGenerator = new RandomGenerator();
+	
+	void SortRandom()
+	{
+		array<ref PS_QuickTvTMission> MissionsNew = {};
+		foreach (PS_QuickTvTMission mission : Missions)
+		{
+			MissionsNew.InsertAt(mission, m_RandomGenerator.RandInt(0, MissionsNew.Count()));
+		}
+		Missions = MissionsNew;
+	}
 	
 	void PS_QuickTvTMissionsConfig()
 	{
